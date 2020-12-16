@@ -1,21 +1,21 @@
-import probability
+# import probability
 
 class MDProblem:
     def __init__(self, fh):
         # Place here your code to load problem from opened file object fh
-        # and use probability . BayesNet () to create the Bayesian network .
+        # and use probability.BayesNet () to create the Bayesian network.
+        
+        load(fh)
+
+        # probability.BayesNet()
         pass
 
     def solve(self):
         # Place here your code to determine the maximum likelihood
-        # solution returning the solution disease name and likelihood .
+        # solution returning the solution disease name and likelihood.
         # Use probability . elimination_ask () to perform probabilistic
         # inference .        
         return (disease, likelihood)
-
-
-
-
 
 
 def load(f):      
@@ -28,8 +28,9 @@ def load(f):
     diseases = []
     symptoms = {}
     exams = {}
-    results = {}
-    probs = []
+    results = []
+    prob = []
+    T = 0
 
     # Beginnig of reading the file
     info = f.readlines()
@@ -48,19 +49,26 @@ def load(f):
 
             # Retrievement of all values correspondent to exams
             elif string[0] == 'E':
-                code = string[1]
-                exams[code] = string[2] # assigning the disease
-                exams[code]['tpr'] = string[3] # assigning TPR
-                exams[code]['fpr'] = string[4] # assigning FPR
+                code = string[1]        
+                exams[code] = {'d':string[2], 'tpr':string[3], 'fpr':string[4]} 
 
             # Retrievement of exams results
             elif string[0] == 'M':
                 codes = string[1::2]
                 values = string[2::2]
-                results = dict(x for x in zip(codes,values))
+                results.append(dict(x for x in zip(codes,values)))
+                T += 1 # to get the total time
 
             # Retrievement of propagation probabilities
             elif string[0] == 'P':
-                probs = string[1]
+                prob = string[1]
+    
+    print(f'Diseases: {diseases}\nSymptoms: {symptoms}\nExams: {exams}\nResults: {results}\nProb: {prob}\nT = {T}')
+    # return diseases, symptoms, exams, results, probs
 
-    return diseases, symptoms, exams, results, probs
+
+if __name__ == "__main__":
+    import sys
+
+    fh = open(sys.argv[1])
+    MDProblem(fh)
