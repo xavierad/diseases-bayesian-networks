@@ -1,21 +1,91 @@
-# import probability
+import probability
+from itertools import product, combinations
 
 class MDProblem:
     def __init__(self, fh):
         # Place here your code to load problem from opened file object fh
         # and use probability.BayesNet () to create the Bayesian network.
         
-        load(fh)
+        # loading the the file
+        self.diseases, self.symptoms, self.exams, self.results, self.prob = load(fh)
 
-        # probability.BayesNet()
-        pass
+        # creating the bayesian network
+        self.MDnet = probability.BayesNet(self.getChildParentsList())
+        
+
+    # maybe improve this algorithm....
+    def getChildParentsList(self):
+        cpl = []        
+        aux_diseases = {d:[] for d in self.diseases}
+        prob_init = 1
+        
+        edges = []
+        for diseases in self.symptoms.values():
+            edges += list(combinations(diseases,2))
+        
+        print(f'edges {edges}')
+        
+        for edge in edges:
+            # make the first disease as parent
+            parent = edge[0]
+            if aux_diseases[parent] == []:
+                aux_diseases[parent] = ''
+
+            print(f'edge {edge} edge[0][1] {edge[0]}')
+            if aux_diseases[edge[1]] == '':
+                aux_diseases[edge[1]] = [parent]
+                print('herer', parent, aux_diseases)
+            else:
+                aux_diseases[edge[1]].append(parent)
+
+        print(f'\naux_diseases {aux_diseases}')
+
+        values = [True, False]
+        for disease in aux_diseases.keys():      
+
+            nparents = len(aux_diseases[disease])            
+            if nparents > 1:
+                string = ''
+                for d in aux_diseases[disease]:
+                    if string == '':
+                        string += d
+                    else:
+                        string += ' ' + d
+
+                aux_diseases[disease] = [string]
+
+                cpd_dict = {}
+                truthTable = list(product(values,repeat=nparents))
+                for row in truthTable:
+                    cpd_dict[row] = prob_init
+                aux_diseases[disease].append(cpd_dict)
+
+            elif nparents == 1:
+                cpd_dict = {}
+                cpd_dict[True] = prob_init
+                cpd_dict[False] = 1- prob_init
+                aux_diseases[disease].append(cpd_dict)
+
+            else:
+                aux_diseases[disease] = [aux_diseases[disease]]
+                aux_diseases[disease].append(prob_init)
+
+        # print(aux_diseases)
+        cpl = [tuple([k]+v) for k, v in aux_diseases.items()] 
+        
+        print(f'\ncpl {cpl}')        
+        
+        return cpl
+
 
     def solve(self):
         # Place here your code to determine the maximum likelihood
         # solution returning the solution disease name and likelihood.
-        # Use probability . elimination_ask () to perform probabilistic
+        # Use probability.elimination_ask () to perform probabilistic
         # inference .        
         return (disease, likelihood)
+
+    
 
 
 def load(f):      
@@ -64,7 +134,7 @@ def load(f):
                 prob = string[1]
     
     print(f'Diseases: {diseases}\nSymptoms: {symptoms}\nExams: {exams}\nResults: {results}\nProb: {prob}\nT = {T}')
-    # return diseases, symptoms, exams, results, probs
+    return diseases, symptoms, exams, results, prob
 
 
 if __name__ == "__main__":
