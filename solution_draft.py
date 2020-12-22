@@ -7,7 +7,7 @@ class MDProblem:
         # and use probability.BayesNet () to create the Bayesian network.
         
         # loading the the file
-        self.diseases, self.symptoms, self.exams, self.results, self.prob = load(fh)
+        self.diseases, self.symptoms, self.exams, self.results, self.prob, self.T = load(fh)
 
         # creating the bayesian network
         self.MDnet = probability.BayesNet(self.getChildParentsList())
@@ -31,14 +31,10 @@ class MDProblem:
             if aux_diseases[parent] == []:
                 aux_diseases[parent] = ''
 
-            print(f'edge {edge} edge[0][1] {edge[0]}')
             if aux_diseases[edge[1]] == '':
                 aux_diseases[edge[1]] = [parent]
-                print('herer', parent, aux_diseases)
             else:
                 aux_diseases[edge[1]].append(parent)
-
-        print(f'\naux_diseases {aux_diseases}')
 
         values = [True, False]
         for disease in aux_diseases.keys():      
@@ -83,7 +79,13 @@ class MDProblem:
         # solution returning the solution disease name and likelihood.
         # Use probability.elimination_ask () to perform probabilistic
         # inference .        
-        return (disease, likelihood)
+        # for time in self.T:
+
+
+        prob = probability.elimination_ask('covid', dict(flu=True, common_cold=True), self.MDnet).show_approx()
+        print(prob)
+
+        # return (disease, likelihood)
 
     
 
@@ -134,11 +136,11 @@ def load(f):
                 prob = string[1]
     
     print(f'Diseases: {diseases}\nSymptoms: {symptoms}\nExams: {exams}\nResults: {results}\nProb: {prob}\nT = {T}')
-    return diseases, symptoms, exams, results, prob
+    return diseases, symptoms, exams, results, prob, T
 
 
 if __name__ == "__main__":
     import sys
 
     fh = open(sys.argv[1])
-    MDProblem(fh)
+    MDProblem(fh).solve()
