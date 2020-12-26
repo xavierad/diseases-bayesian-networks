@@ -23,7 +23,7 @@ class MDProblem:
         for diseases in self.symptoms.values():
             edges += list(combinations(diseases,2))
         
-        print(f'edges {edges}')
+        print(f'\nedges {edges}')
         
         for edge in edges:
             # make the first disease as parent
