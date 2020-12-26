@@ -1,6 +1,11 @@
 import probability
 from itertools import product, combinations
+'''
+Dúvidas: 
+-probabilidades iniciais
+-como integrar as probabilidades dos exames com as já existentes probabilidades (t > 1)
 
+'''
 class MDProblem:
     def __init__(self, fh):
         # Place here your code to load problem from opened file object fh
@@ -17,13 +22,12 @@ class MDProblem:
     def getChildParentsList(self):
         cpl = []        
         aux_diseases = {d:[] for d in self.diseases}
-        prob_init = 1
-        
+        prob_init = 0
         edges = []
         for diseases in self.symptoms.values():
             edges += list(combinations(diseases,2))
         
-        print(f'\nedges {edges}')
+        print(f'edges {edges}')
         
         for edge in edges:
             # make the first disease as parent
@@ -79,10 +83,26 @@ class MDProblem:
         # solution returning the solution disease name and likelihood.
         # Use probability.elimination_ask () to perform probabilistic
         # inference .        
-        # for time in self.T:
 
+        for step in self.results:
+            for exam, value in step.items():
+                disease = self.exams[exam]['disease']
+                if value:
+                    rate = self.exams[exam]['tpr']                
+                else:
+                    rate = self.exams[exam]['fpr'] #we want the probability of the test being positive (because false is implicit). so we calculate 1 - TNR, which is the FPR
+                
+                for node in self.MDnet.nodes:
+                    if node.variable == disease:
+                        node.cpt = {() : rate}
+                #prob = probability.elimination_ask(self.exams[step])
 
-        prob = probability.elimination_ask('covid', dict(flu=True, common_cold=True), self.MDnet).show_approx()
+        # TPR = 1-FNR
+        # FPR = 1-TNR
+        # TNR = 1-FPR
+        # FNR = 1-TPR
+
+        prob = probability.elimination_ask('flu', dict(covid=True), self.MDnet).show_approx()
         print(prob)
 
         # return (disease, likelihood)
@@ -122,8 +142,8 @@ def load(f):
             # Retrievement of all values correspondent to exams
             elif string[0] == 'E':
                 code = string[1]        
-                exams[code] = {'d':string[2], 'tpr':string[3], 'fpr':string[4]} 
-
+                exams[code] = {'disease':string[2], 'tpr':string[3], 'fpr':string[4]} 
+                
             # Retrievement of exams results
             elif string[0] == 'M':
                 codes = string[1::2]
