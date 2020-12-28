@@ -50,28 +50,41 @@ class MDProblem:
                                 cpd_dict[row] = 1
                             else:
                                 cpd_dict[row] = float(self.prob)                
-
-                    cpl.append((disease + str(t), parents[:-1], cpd_dict))
-
-        #  exams[code] = {'disease':string[2], 'tpr':string[3], 'fpr':string[4]} 
-        # results.append(dict(x for x in zip(codes,values)))
-        for exam_results, in self.exams:
-                
 # Covid1 | Flu |  P(covid2)
 # T         T  |  pp
 # T         F  |  1
 # F         T  |  0
 # F         F  |  0
-           
+
+                    cpl.append((disease + str(t), parents[:-1], cpd_dict))
+
+        # exams[code] = {'disease':string[2], 'tpr':string[3], 'fpr':string[4]} 
+        # Exams: {'pcr': {'disease': 'covid', 'tpr': '0.6893', 'fpr': '0.3426'}, 'chest_xray': {'disease': 'common_cold', 'tpr': '0.9893', 'fpr': '0.0526'}, 'feno': {'disease': 'asthma', 'tpr': '0.8932', 'fpr': '0.1213'}, 'ridt': {'disease': 'flu'
+        # , 'tpr': '0.8321', 'fpr': '0.2423'}}
+
+        # results.append(dict(x for x in zip(codes,values)))
+        # Results: [{'pcr': 'F'}, {'chest_xray': 'T', 'feno': 'F'}, {'ridt': 'F', 'chest_xray': 'F'}]
+
+        # to add result childs to corresponding diseases at corresponding time-step
+        for t,exam in enumerate(self.results):
+            for code in exam.keys():
+                disease = self.exams[code]['disease'] # to get the disease corresponding to exam
+                tpr = self.exams[code]['disease'] # to get the corresponding tpr
+                fpr = self.exams[code]['disease'] # to get the corresponding fpr
+
+                parent =  disease + str(t) # at time-step t, the disease is parent of the exam result
+                cpl.append((code, parent,{T:tpr, F:fpr}))
+ fui almoçar, fazes commit depois?
+#TRP: P(T|D)
+
+# D | P(pcr)
+# T | TPR
+# F | FPR = P(pcr=T\D=F)
+
 
         #     #covid->pcr
         #     cpl.append((exam['disease']+'1', code, {T : exam['tpr'], F : exam['fpr']}))
             
-            #TRP: P(T|D)
-
-            # D | P(pcr)
-            # T | TPR
-            # F | FPR = P(pcr=T\D=F)
             
         print(f'\ncpl {cpl}')        
         
