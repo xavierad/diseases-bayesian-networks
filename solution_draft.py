@@ -20,62 +20,121 @@ class MDProblem:
 
     # maybe improve this algorithm....
     def getChildParentsList(self):
-        cpl = []        
-        aux_diseases = {d:[] for d in self.diseases}
-        prob_init = 0
-        edges = []
-        for diseases in self.symptoms.values():
-            edges += list(combinations(diseases,2))
         
-        print(f'edges {edges}')
+        T, F = True, False
+        cpl = []
         
-        for edge in edges:
-            # make the first disease as parent
-            parent = edge[0]
-            if aux_diseases[parent] == []:
-                aux_diseases[parent] = ''
+        for t in range(self.T):
+            for disease in self.diseases:
+                if t == 0:
+                    cpl.append((disease + str(t), '', 0.5))
+                else:
+                    #Add all the parents from the current disease node
+                    parents = disease + str(t-1) + ' '
+                    already_in_list_disease = [disease]
+                    for s_disease in self.symptoms.values():
+                        if disease in s_disease:
+                            for x in s_disease:
+                                if x not in already_in_list_disease:
+                                    parents = parents + x + str(t-1) + ' '
+                                    already_in_list_disease.append(x)                        
+                    
+                    nparents = len(already_in_list_disease)
+                    cpd_dict = {}
+                    truth_table = list(product([T, F],repeat=nparents))
+                    for row in truth_table:                        
+                        if row[0] == F:
+                            cpd_dict[row] = 0
+                        else:
+                            if not any(row[1:]):
+                                cpd_dict[row] = 1
+                            else:
+                                cpd_dict[row] = float(self.prob)                
 
-            if aux_diseases[edge[1]] == '':
-                aux_diseases[edge[1]] = [parent]
-            else:
-                aux_diseases[edge[1]].append(parent)
+                    cpl.append((disease + str(t), parents[:-1], cpd_dict))
 
-        values = [True, False]
-        for disease in aux_diseases.keys():      
+        #  exams[code] = {'disease':string[2], 'tpr':string[3], 'fpr':string[4]} 
+        # results.append(dict(x for x in zip(codes,values)))
+        for exam_results, in self.exams:
+                
+# Covid1 | Flu |  P(covid2)
+# T         T  |  pp
+# T         F  |  1
+# F         T  |  0
+# F         F  |  0
+           
 
-            nparents = len(aux_diseases[disease])            
-            if nparents > 1:
-                string = ''
-                for d in aux_diseases[disease]:
-                    if string == '':
-                        string += d
-                    else:
-                        string += ' ' + d
+        #     #covid->pcr
+        #     cpl.append((exam['disease']+'1', code, {T : exam['tpr'], F : exam['fpr']}))
+            
+            #TRP: P(T|D)
 
-                aux_diseases[disease] = [string]
-
-                cpd_dict = {}
-                truthTable = list(product(values,repeat=nparents))
-                for row in truthTable:
-                    cpd_dict[row] = prob_init
-                aux_diseases[disease].append(cpd_dict)
-
-            elif nparents == 1:
-                cpd_dict = {}
-                cpd_dict[True] = prob_init
-                cpd_dict[False] = 1- prob_init
-                aux_diseases[disease].append(cpd_dict)
-
-            else:
-                aux_diseases[disease] = [aux_diseases[disease]]
-                aux_diseases[disease].append(prob_init)
-
-        # print(aux_diseases)
-        cpl = [tuple([k]+v) for k, v in aux_diseases.items()] 
-        
+            # D | P(pcr)
+            # T | TPR
+            # F | FPR = P(pcr=T\D=F)
+            
         print(f'\ncpl {cpl}')        
         
         return cpl
+
+        
+
+        # cpl = []        
+        # aux_diseases = {d:[] for d in self.diseases}
+        # prob_init = 0.5
+        # edges = []
+        # for diseases in self.symptoms.values():
+        #     edges += list(combinations(diseases,2))
+        
+        # print(f'edges {edges}')
+        
+        # for edge in edges:
+        #     # make the first disease as parent
+        #     parent = edge[0]
+        #     if aux_diseases[parent] == []:
+        #         aux_diseases[parent] = ''
+
+        #     if aux_diseases[edge[1]] == '':
+        #         aux_diseases[edge[1]] = [parent]
+        #     else:
+        #         aux_diseases[edge[1]].append(parent)
+
+        # values = [True, False]
+        # for disease in aux_diseases.keys():      
+
+        #     nparents = len(aux_diseases[disease])            
+        #     if nparents > 1:
+        #         string = ''
+        #         for d in aux_diseases[disease]:
+        #             if string == '':
+        #                 string += d
+        #             else:
+        #                 string += ' ' + d
+
+        #         aux_diseases[disease] = [string]
+
+        #         cpd_dict = {}
+        #         truthTable = list(product(values,repeat=nparents))
+        #         for row in truthTable:
+        #             cpd_dict[row] = prob_init
+        #         aux_diseases[disease].append(cpd_dict)
+
+        #     elif nparents == 1:
+        #         cpd_dict = {}
+        #         cpd_dict[True] = prob_init
+        #         cpd_dict[False] = 1- prob_init
+        #         aux_diseases[disease].append(cpd_dict)
+
+        #     else:
+        #         aux_diseases[disease] = [aux_diseases[disease]]
+        #         aux_diseases[disease].append(prob_init)
+
+        # # print(aux_diseases)
+        # cpl = [tuple([k]+v) for k, v in aux_diseases.items()] 
+        
+        # print(f'\ncpl {cpl}')        
+        
+        # return cpl
 
 
     def solve(self):
@@ -102,7 +161,7 @@ class MDProblem:
         # TNR = 1-FPR
         # FNR = 1-TPR
 
-        prob = probability.elimination_ask('flu', dict(covid=True), self.MDnet).show_approx()
+        prob = probability.elimination_ask('covid0', dict(pcr=True), self.MDnet).show_approx()
         print(prob)
 
         # return (disease, likelihood)
